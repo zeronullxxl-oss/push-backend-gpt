@@ -1,0 +1,11 @@
+{
+  "name": "gpt-trade-backend",
+  "version": "1.0.0",
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "web-push": "^3.6.0",
+    "better-sqlite3": "^11.0.0"
+  }
+}
