@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GPT Trade — Admin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080a;--card:#111115;--border:#1e1e25;--text:#e8eaed;--dim:#9aa0a6;--brand:#5f6ba5;--green:#01875f;--red:#d93025;--orange:#f09000;--purple:#a855f7}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+a{color:var(--brand)}
+
+/* Header */
+.header{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:0 16px}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:12px 0}
+.header h1{font-size:18px;font-weight:700;white-space:nowrap}
+.header h1 span{color:var(--brand)}
+.tabs{display:flex;gap:2px;overflow-x:auto}
+.tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;transition:.2s;color:var(--dim)}
+.tab:hover{background:#1a1a22}
+.tab.active{background:var(--brand);color:#fff}
+
+/* Layout */
+.container{max-width:1200px;margin:0 auto;padding:16px}
+.section{display:none}.section.active{display:block}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px}
+.card h3{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--dim)}
+
+/* Grid */
+.grid-4{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.stat-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+.stat-card .val{font-size:22px;font-weight:700;color:var(--brand)}
+.stat-card .lbl{font-size:11px;color:var(--dim);margin-top:4px}
+
+/* Period selector */
+.period-bar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.period-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--dim);cursor:pointer;font-size:12px}
+.period-btn.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:.2s}
+.btn-brand{background:var(--brand);color:#fff}
+.btn-brand:hover{opacity:.85}
+.btn-green{background:var(--green);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* Funnel */
+.funnel-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.funnel-label{width:120px;font-size:12px;color:var(--dim);text-align:right;flex-shrink:0}
+.funnel-bar-wrap{flex:1;height:24px;background:var(--bg);border-radius:4px;overflow:hidden;position:relative}
+.funnel-bar{height:100%;border-radius:4px;transition:width .5s;min-width:2px}
+.funnel-val{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600}
+
+/* Timeline */
+.timeline-chart{display:flex;align-items:flex-end;gap:3px;height:120px;padding:8px 0}
+.tl-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end}
+.tl-bar-wrap{width:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:1px}
+.tl-bar{width:100%;border-radius:2px 2px 0 0;min-height:1px;transition:height .3s}
+.tl-date{font-size:9px;color:var(--dim);writing-mode:vertical-lr;transform:rotate(180deg);max-height:40px;overflow:hidden}
+
+/* Table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px;color:var(--dim);font-weight:500;border-bottom:1px solid var(--border);font-size:12px;white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--border);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:hover{background:#0d0d12}
+
+/* Status badge-select */
+.status-select{appearance:none;-webkit-appearance:none;border:none;padding:4px 22px 4px 10px;border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;background-size:8px;color:#fff}
+
+/* Input */
+input,textarea,select{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;width:100%}
+input:focus,textarea:focus{outline:none;border-color:var(--brand)}
+.form-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.form-row label{font-size:12px;color:var(--dim);min-width:60px}
+
+/* Push quick btns */
+.quick-btns{display:flex;flex-wrap:wrap;gap:6px}
+.quick-btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;transition:.2s}
+.quick-btn:hover{border-color:var(--brand);background:#151520}
+
+/* Blacklist */
+.bl-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid var(--border)}
+.bl-item:last-child{border:none}
+
+/* Responsive */
+@media(max-width:600px){
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .header-inner{flex-wrap:wrap}
+  .funnel-label{width:80px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+<div class="header-inner">
+  <h1>📊 <span>GPT Trade</span></h1>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('dashboard')">📊 Dashboard</div>
+    <div class="tab" onclick="showTab('leads')">👤 Leads</div>
+    <div class="tab" onclick="showTab('push')">🔔 Push</div>
+    <div class="tab" onclick="showTab('settings')">⚙️ Settings</div>
+  </div>
+</div>
+</div>
+
+<div class="container">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="section active" id="sec-dashboard">
+
+<div class="period-bar">
+  <button class="period-btn" data-p="today">Today</button>
+  <button class="period-btn active" data-p="7d">7 Days</button>
+  <button class="period-btn" data-p="yesterday">Yesterday</button>
+  <button class="period-btn" data-p="30d">30 Days</button>
+  <button class="period-btn" data-p="month">Prev Month</button>
+  <button class="period-btn" data-p="year">Year</button>
+  <button class="period-btn" data-p="all">All Time</button>
+  <button class="btn btn-brand btn-sm" onclick="loadDashboard()">🔄 Refresh</button>
+</div>
+
+<div class="card"><h3>Overview</h3><div class="grid-4" id="overview"></div></div>
+<div class="card"><h3>Funnel</h3><div id="funnel"></div></div>
+<div class="card"><h3 id="tl-title">Timeline — Last 7 Days</h3><div class="timeline-chart" id="timeline"></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div class="card"><h3>Geo Distribution</h3><div id="geo-dist"></div></div>
+  <div class="card"><h3>Devices</h3><div id="device-dist"></div></div>
+</div>
+<div class="card"><h3>Lead Statuses</h3><div class="grid-4" id="status-dist"></div></div>
+
+</div>
+
+<!-- ═══ LEADS ═══ -->
+<div class="section" id="sec-leads">
+<div class="card">
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <select id="lead-filter" style="width:auto" onchange="loadLeads()">
+      <option value="">All Statuses</option>
+      <option value="new">new</option><option value="video">video</option>
+      <option value="traded">traded</option><option value="verification">verification</option>
+      <option value="approved">approved</option><option value="dep">dep</option>
+      <option value="wrong_number">wrong_number</option><option value="no_answer">no_answer</option>
+      <option value="trash">trash</option><option value="invalid">invalid</option>
+      <option value="test">test</option>
+    </select>
+    <button class="btn btn-brand btn-sm" onclick="loadLeads()">🔄 Refresh</button>
+  </div>
+  <div class="table-wrap">
+    <table><thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Phone</th><th>Buyer</th><th>Geo</th><th>PWA</th><th>Status</th></tr></thead>
+    <tbody id="leads-body"></tbody></table>
+  </div>
+</div>
+</div>
+
+<!-- ═══ PUSH ═══ -->
+<div class="section" id="sec-push">
+
+<div class="card"><h3>👥 Подписчики (<span id="subs-count">0</span>)</h3>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <input id="sub-filter" placeholder="Поиск по IP / Device ID" style="flex:1;min-width:150px" oninput="filterSubs()">
+    <button class="btn btn-red btn-sm" onclick="deleteSubsByFilter()">🗑 Удалить найденных</button>
+  </div>
+  <div id="subs-list" style="max-height:300px;overflow-y:auto"></div>
+</div>
+
+<div class="card"><h3>⏰ Автоматические пуши после установки</h3>
+  <div class="form-row"><label>Заголовок</label><input id="pi-title" placeholder="Приветственный пуш"></div>
+  <div class="form-row"><label>Текст</label><input id="pi-body" placeholder="Добро пожаловать! Начните торговать с ИИ"></div>
+  <div class="form-row"><label>Картинка</label><input id="pi-image" placeholder="URL (необязательно)"></div>
+  <div class="form-row"><label>URL</label><input id="pi-url" placeholder="/" value="/platform.html"></div>
+  <div class="form-row"><label>Задержка (сек)</label><input id="pi-delay" type="number" value="5" min="0" max="3600"></div>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+    <button class="btn btn-brand" onclick="savePostInstall()">💾 Сохранить</button>
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="pi-active"> Активно</label>
+    <span id="pi-result" style="font-size:12px"></span>
+  </div>
+</div>
+
+<div class="card"><h3>📅 Запланированные пуши</h3>
+  <div id="scheduled-list"></div>
+  <details style="margin-top:12px">
+    <summary style="cursor:pointer;color:var(--brand);font-size:13px">➕ Добавить расписание</summary>
+    <div style="margin-top:10px">
+      <div class="form-row"><label>Заголовок</label><input id="sch-title" placeholder="Заголовок"></div>
+      <div class="form-row"><label>Текст</label><input id="sch-body" placeholder="Текст"></div>
+      <div class="form-row"><label>Картинка</label><input id="sch-image" placeholder="URL (необязательно)"></div>
+      <div class="form-row"><label>URL</label><input id="sch-url" placeholder="/" value="/platform.html"></div>
+      <div class="form-row"><label>Тип</label>
+        <select id="sch-type" onchange="toggleSchFields()">
+          <option value="once">Один раз (дата+время)</option>
+          <option value="interval">Интервал (каждые N минут)</option>
+          <option value="daily">Ежедневно (в указанное время UTC)</option>
+        </select>
+      </div>
+      <div class="form-row" id="sch-datetime-row"><label>Дата/время</label><input id="sch-datetime" type="datetime-local"></div>
+      <div class="form-row" id="sch-interval-row" style="display:none"><label>Интервал (мин)</label><input id="sch-interval" type="number" min="1" value="60"></div>
+      <div class="form-row" id="sch-time-row" style="display:none"><label>Время UTC (HH:MM)</label><input id="sch-time" type="time" value="09:00"></div>
+      <button class="btn btn-brand" onclick="addScheduled()">📅 Создать</button>
+    </div>
+  </details>
+</div>
+
+<div class="card"><h3>📋 Шаблоны</h3><div id="templates-list"></div>
+  <details style="margin-top:12px">
+    <summary style="cursor:pointer;color:var(--brand);font-size:13px">➕ Новый шаблон</summary>
+    <div style="margin-top:10px">
+      <div class="form-row"><label>Имя</label><input id="tpl-name" placeholder="Название шаблона"></div>
+      <div class="form-row"><label>Заголовок</label><input id="tpl-title" placeholder="Заголовок пуша"></div>
+      <div class="form-row"><label>Текст</label><input id="tpl-body" placeholder="Текст пуша"></div>
+      <div class="form-row"><label>Картинка</label><input id="tpl-image" placeholder="URL (необязательно)"></div>
+      <div class="form-row"><label>URL</label><input id="tpl-url" placeholder="/" value="/platform.html"></div>
+      <button class="btn btn-brand" onclick="saveTemplate()">💾 Сохранить</button>
+    </div>
+  </details>
+</div>
+
+<div class="card"><h3>⚡ Быстрая отправка</h3>
+  <div class="quick-btns">
+    <div class="quick-btn" onclick="quickPush('📈 BTC Alert','Bitcoin пробил $100K! Откройте приложение.')">📈 BTC</div>
+    <div class="quick-btn" onclick="quickPush('🔥 Сигнал','Новый сигнал с высокой точностью. Действуйте!')">🔥 Сигнал</div>
+    <div class="quick-btn" onclick="quickPush('💰 Прибыль','Ваш портфель вырос на 12%. Проверьте баланс.')">💰 Прибыль</div>
+    <div class="quick-btn" onclick="quickPush('🚀 Обновление','Новые функции ИИ доступны. Обновите стратегию.')">🚀 Обновление</div>
+    <div class="quick-btn" onclick="quickPush('⚠️ Срочно','Высокая волатильность. Зафиксируйте прибыль.')">⚠️ Срочно</div>
+    <div class="quick-btn" onclick="quickPush('🎁 Бонус','Эксклюзивный бонус для активных трейдеров!')">🎁 Бонус</div>
+  </div>
+</div>
+
+<div class="card"><h3>✍️ Кастомный пуш</h3>
+  <div class="form-row"><label>Заголовок</label><input id="push-title" placeholder="Заголовок"></div>
+  <div class="form-row"><label>Текст</label><input id="push-body" placeholder="Текст"></div>
+  <div class="form-row"><label>Картинка</label><input id="push-image" placeholder="URL (необязательно)"></div>
+  <div class="form-row"><label>URL</label><input id="push-url" placeholder="/" value="/platform.html"></div>
+  <button class="btn btn-brand" onclick="sendCustomPush()">🚀 Отправить</button>
+  <span id="push-result" style="margin-left:12px;font-size:12px"></span>
+</div>
+
+<div class="card"><h3>📜 Лог отправок (последние 20)</h3><div id="push-log" style="max-height:200px;overflow-y:auto"></div></div>
+
+<div class="card"><h3>📊 Push Stats</h3><div class="grid-4" id="push-stats"></div></div>
+
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div class="section" id="sec-settings">
+
+<div class="card"><h3>🚫 IP Blacklist</h3>
+  <div class="form-row">
+    <input id="bl-ip" placeholder="IP address" style="flex:2">
+    <input id="bl-label" placeholder="Label (optional)" style="flex:2">
+    <button class="btn btn-brand btn-sm" onclick="addBlacklist()">➕ Add</button>
+    <button class="btn btn-sm" style="background:#333;color:var(--text)" onclick="addMyIP()">📍 Add My IP</button>
+  </div>
+  <div id="blacklist-items" style="margin-top:8px"></div>
+</div>
+
+<div class="card"><h3>🗑 Reset Analytics</h3>
+  <p style="font-size:12px;color:var(--dim);margin-bottom:8px">Clears ONLY events (page views, installs, funnel). Does NOT touch leads, push subs, templates.</p>
+  <div id="backup-banner" style="display:none;background:#0a2e1a;border:1px solid #01875f;border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px">
+    💾 Backup available: <span id="backup-count">0</span> events
+    <button class="btn btn-green btn-sm" style="margin-left:8px" onclick="restoreStats()">♻️ Restore</button>
+  </div>
+  <div class="form-row">
+    <input id="reset-confirm" placeholder='Type "подтвердить" to confirm' style="flex:2">
+    <button class="btn btn-red btn-sm" onclick="resetStats()">🗑 Reset</button>
+  </div>
+</div>
+
+<div class="card"><h3>ℹ️ System Info</h3><div class="grid-4" id="sys-info"></div></div>
+
+</div>
+
+</div><!-- /container -->
+
+<script>
+const API = window.location.origin;
+let currentPeriod = '7d';
+
+// ═══ TABS ═══
+function showTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'leads') loadLeads();
+  if (name === 'push') { loadSubs(); loadPostInstall(); loadScheduled(); loadTemplates(); loadPushLog(); loadPushStats(); }
+  if (name === 'settings') { loadBlacklist(); loadBackupStatus(); loadSysInfo(); }
+}
+
+// ═══ PERIOD ═══
+document.querySelectorAll('.period-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPeriod = btn.dataset.p;
+    loadDashboard();
+  };
+});
+
+// ═══ DASHBOARD ═══
+async function loadDashboard() {
+  try {
+    const r = await fetch(API + '/api/analytics?period=' + currentPeriod);
+    const d = await r.json();
+
+    // Overview
+    const ov = d.overview;
+    const items = [
+      ['Visitors', ov.visitors], ['Page Views', ov.pageViews], ['Gate Shown', ov.gateShown],
+      ['Install Clicks', ov.installClicks], ['PWA Installs', ov.pwaInstalls], ['PWA Opens', ov.pwaOpens],
+      ['Total Leads', ov.totalLeads], ['Video Plays', ov.videoPlays], ['Video Done', ov.videoDone],
+      ['Push Subs', ov.pushSubs], ['Avg Time', Math.round(ov.avgTime) + 's'], ['Sessions', ov.sessions]
+    ];
+    document.getElementById('overview').innerHTML = items.map(([l, v]) =>
+      `<div class="stat-card"><div class="val">${v}</div><div class="lbl">${l}</div></div>`).join('');
+
+    // Funnel
+    const f = d.funnel;
+    const funnelSteps = [
+      ['Gate Shown', f.gateShown, '#5f6ba5'],
+      ['Install Click', f.installClick, '#4a80c4'],
+      ['PWA Installed', f.pwaInstalled, '#3a9ed8'],
+      ['PWA Open', f.pwaOpen, '#2abfbf'],
+      ['Name Filled', f.nameFilled, '#01875f'],
+      ['Phone Filled', f.phoneFilled, '#28a745'],
+      ['Lead Complete', f.leadComplete, '#48c774'],
+      ['Video Play', f.videoPlay, '#f09000'],
+      ['Video Done', f.videoDone, '#ff6b6b'],
+    ];
+    const maxF = Math.max(...funnelSteps.map(s => s[1]), 1);
+    document.getElementById('funnel').innerHTML = funnelSteps.map(([label, val, color]) => {
+      const pct = (val / maxF * 100).toFixed(1);
+      return `<div class="funnel-row"><div class="funnel-label">${label}</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${color}"></div><div class="funnel-val">${val}</div></div></div>`;
+    }).join('');
+
+    // Timeline
+    document.getElementById('tl-title').textContent = 'Timeline — ' + d.period;
+    const tl = d.timeline || [];
+    if (tl.length) {
+      const maxV = Math.max(...tl.map(t => t.views), 1);
+      const maxL = Math.max(...tl.map(t => t.leads), 1);
+      const maxAll = Math.max(maxV, maxL, 1);
+      document.getElementById('timeline').innerHTML = tl.map(t => {
+        const vH = Math.max((t.views / maxAll) * 90, 2);
+        const lH = Math.max((t.leads / maxAll) * 90, 1);
+        const label = t.date.length > 7 ? t.date.slice(5) : t.date;
+        return `<div class="tl-col"><div class="tl-bar-wrap"><div class="tl-bar" style="height:${vH}%;background:var(--brand)" title="Views: ${t.views}"></div><div class="tl-bar" style="height:${lH}%;background:var(--green)" title="Leads: ${t.leads}"></div></div><div class="tl-date">${label}</div></div>`;
+      }).join('');
+    } else {
+      document.getElementById('timeline').innerHTML = '<div style="color:var(--dim);padding:20px;text-align:center">No data</div>';
+    }
+
+    // Geo
+    renderBars('geo-dist', d.geo, 'geo');
+    // Devices
+    renderBars('device-dist', d.devices, 'device');
+
+    // Statuses
+    const statusColors = { new:'#5f6ba5', video:'#f09000', traded:'#d93025', verification:'#01875f', approved:'#0a5c3e', dep:'#a855f7', wrong_number:'#d93025', no_answer:'#01875f', trash:'#d93025', invalid:'#d93025', test:'#f0c000' };
+    document.getElementById('status-dist').innerHTML = (d.statuses || []).map(s =>
+      `<div class="stat-card" style="border-color:${statusColors[s.status]||'var(--border)'}"><div class="val" style="color:${statusColors[s.status]||'var(--brand)'}">${s.count}</div><div class="lbl">${s.status}</div></div>`
+    ).join('') || '<div style="color:var(--dim)">No leads</div>';
+
+  } catch(e) { console.error(e); }
+}
+
+function renderBars(elId, data, key) {
+  const el = document.getElementById(elId);
+  if (!data || !data.length) { el.innerHTML = '<div style="color:var(--dim)">No data</div>'; return; }
+  const max = Math.max(...data.map(d => d.count), 1);
+  el.innerHTML = data.map(d => {
+    const pct = (d.count / max * 100).toFixed(1);
+    return `<div class="funnel-row"><div class="funnel-label">${d[key] || 'Unknown'}</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:var(--brand)"></div><div class="funnel-val">${d.count}</div></div></div>`;
+  }).join('');
+}
+
+// ═══ LEADS ═══
+const statusColors = { new:'#5f6ba5', video:'#f09000', traded:'#d93025', verification:'#01875f', approved:'#0a5c3e', dep:'#a855f7', wrong_number:'#d93025', no_answer:'#01875f', trash:'#d93025', invalid:'#d93025', test:'#f0c000' };
+const allStatuses = ['new','video','traded','verification','approved','dep','wrong_number','no_answer','trash','invalid','test'];
+
+async function loadLeads() {
+  const filter = document.getElementById('lead-filter').value;
+  const url = API + '/api/leads?limit=200' + (filter ? '&status=' + filter : '');
+  const r = await fetch(url);
+  const leads = await r.json();
+  const tbody = document.getElementById('leads-body');
+  tbody.innerHTML = leads.map(l => {
+    const date = l.created_at ? new Date(l.created_at + 'Z').toLocaleString() : '';
+    const opts = allStatuses.map(s => `<option value="${s}"${s===l.status?' selected':''}>${s}</option>`).join('');
+    const bg = statusColors[l.status] || '#333';
+    return `<tr>
+      <td>${date}</td><td>${l.first_name||''} ${l.last_name||''}</td><td>${l.email||''}</td><td>${l.phone||''}</td>
+      <td>${l.buyer||''}</td><td>${l.geo||''}</td><td>${l.is_pwa?'✅':'❌'}</td>
+      <td><select class="status-select" style="background-color:${bg}" onchange="updateStatus('${l.lead_id}',this.value,this)">${opts}</select></td>
+    </tr>`;
+  }).join('');
+}
+
+async function updateStatus(leadId, status, el) {
+  await fetch(API + '/api/lead/status', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ lead_id: leadId, status })
+  });
+  el.style.backgroundColor = statusColors[status] || '#333';
+}
+
+// ═══ PUSH ═══
+// ═══ SUBSCRIBERS ═══
+var allSubs = [];
+async function loadSubs() {
+  const r = await fetch(API + '/api/subs');
+  allSubs = await r.json();
+  document.getElementById('subs-count').textContent = allSubs.length;
+  renderSubs(allSubs);
+}
+function renderSubs(subs) {
+  const el = document.getElementById('subs-list');
+  if (!subs.length) { el.innerHTML = '<div style="color:var(--dim);padding:8px">Нет подписчиков</div>'; return; }
+  el.innerHTML = subs.map(s => `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+    <div style="min-width:0;flex:1">
+      <div><b>ID:</b> ${s.device_id || '—'} &nbsp; <b>IP:</b> ${s.ip || '—'}</div>
+      <div style="color:var(--dim)">${s.created_at} &nbsp; ${s.active?'🟢 Активен':'🔴 Отключён'}</div>
+    </div>
+    <div style="display:flex;gap:4px;flex-shrink:0">
+      <button class="btn btn-sm" style="background:${s.active?'#c53':'#2a5'};color:#fff;font-size:11px" onclick="toggleSub(${s.id})">${s.active?'Откл':'Вкл'}</button>
+      <button class="btn btn-red btn-sm" style="font-size:11px" onclick="deleteSub(${s.id})">✕</button>
+    </div>
+  </div>`).join('');
+}
+function filterSubs() {
+  const q = document.getElementById('sub-filter').value.toLowerCase();
+  if (!q) { renderSubs(allSubs); return; }
+  renderSubs(allSubs.filter(s => (s.ip||'').toLowerCase().includes(q) || (s.device_id||'').toLowerCase().includes(q)));
+}
+async function toggleSub(id) {
+  await fetch(API + '/api/subs/' + id + '/toggle', { method:'PATCH' });
+  loadSubs();
+}
+async function deleteSub(id) {
+  await fetch(API + '/api/subs/' + id, { method:'DELETE' });
+  loadSubs();
+}
+async function deleteSubsByFilter() {
+  const q = document.getElementById('sub-filter').value.toLowerCase();
+  if (!q) return alert('Введите фильтр');
+  const matched = allSubs.filter(s => (s.ip||'').toLowerCase().includes(q) || (s.device_id||'').toLowerCase().includes(q));
+  if (!matched.length) return alert('Ничего не найдено');
+  if (!confirm('Удалить ' + matched.length + ' подписчиков?')) return;
+  for (const s of matched) await fetch(API + '/api/subs/' + s.id, { method:'DELETE' });
+  loadSubs();
+}
+
+// ═══ POST-INSTALL PUSH ═══
+async function loadPostInstall() {
+  const r = await fetch(API + '/api/push-config');
+  const c = await r.json();
+  document.getElementById('pi-title').value = c.title || '';
+  document.getElementById('pi-body').value = c.body || '';
+  document.getElementById('pi-image').value = c.image || '';
+  document.getElementById('pi-url').value = c.url || '/platform.html';
+  document.getElementById('pi-delay').value = c.delay || 5;
+  document.getElementById('pi-active').checked = c.active;
+}
+async function savePostInstall() {
+  await fetch(API + '/api/push-config', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ active:document.getElementById('pi-active').checked, title:v('pi-title'), body:v('pi-body'), image:v('pi-image'), url:v('pi-url'), delay:parseInt(v('pi-delay'))||5 })
+  });
+  document.getElementById('pi-result').textContent = '✅ Сохранено';
+  setTimeout(() => document.getElementById('pi-result').textContent = '', 2000);
+}
+
+// ═══ SCHEDULED PUSHES ═══
+function toggleSchFields() {
+  const t = v('sch-type');
+  document.getElementById('sch-datetime-row').style.display = t === 'once' ? '' : 'none';
+  document.getElementById('sch-interval-row').style.display = t === 'interval' ? '' : 'none';
+  document.getElementById('sch-time-row').style.display = t === 'daily' ? '' : 'none';
+}
+async function loadScheduled() {
+  const r = await fetch(API + '/api/scheduled');
+  const items = await r.json();
+  const el = document.getElementById('scheduled-list');
+  if (!items.length) { el.innerHTML = '<div style="color:var(--dim);padding:8px">Нет запланированных пушей</div>'; return; }
+  const typeLabel = { once:'Один раз', interval:'Интервал', daily:'Ежедневно' };
+  el.innerHTML = items.map(s => {
+    let info = typeLabel[s.schedule_type] || s.schedule_type;
+    if (s.schedule_type === 'interval') info += ` (каждые ${s.interval_minutes} мин)`;
+    if (s.schedule_type === 'daily') info += ` (${s.send_at} UTC)`;
+    if (s.schedule_type === 'once') info += ` (${s.send_at || s.next_send_at})`;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid var(--border)">
+      <div><strong>${s.title}</strong><br><span style="font-size:11px;color:var(--dim)">${info} &nbsp; ${s.active?'🟢':'🔴'} &nbsp; След: ${s.next_send_at?new Date(s.next_send_at).toLocaleString():'—'}</span></div>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-sm" style="background:${s.active?'#c53':'#2a5'};color:#fff;font-size:11px" onclick="toggleScheduled(${s.id})">${s.active?'Стоп':'Вкл'}</button>
+        <button class="btn btn-red btn-sm" onclick="deleteScheduled(${s.id})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function addScheduled() {
+  const type = v('sch-type');
+  let sendAt = '';
+  let intervalMin = 0;
+  if (type === 'once') { sendAt = document.getElementById('sch-datetime').value ? new Date(document.getElementById('sch-datetime').value).toISOString() : ''; }
+  else if (type === 'interval') { intervalMin = parseInt(v('sch-interval')) || 60; }
+  else if (type === 'daily') { sendAt = v('sch-time'); }
+  await fetch(API + '/api/scheduled', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ title:v('sch-title'), body:v('sch-body'), image:v('sch-image'), url:v('sch-url'), schedule_type:type, send_at:sendAt, interval_minutes:intervalMin })
+  });
+  loadScheduled();
+  ['sch-title','sch-body','sch-image'].forEach(id => document.getElementById(id).value = '');
+}
+async function toggleScheduled(id) {
+  await fetch(API + '/api/scheduled/' + id + '/toggle', { method:'PATCH' });
+  loadScheduled();
+}
+async function deleteScheduled(id) {
+  if (!confirm('Удалить?')) return;
+  await fetch(API + '/api/scheduled/' + id, { method:'DELETE' });
+  loadScheduled();
+}
+
+// ═══ TEMPLATES ═══
+async function loadTemplates() {
+  const r = await fetch(API + '/api/templates');
+  const tpls = await r.json();
+  const el = document.getElementById('templates-list');
+  if (!tpls.length) { el.innerHTML = '<div style="color:var(--dim);padding:8px">Нет шаблонов</div>'; return; }
+  el.innerHTML = tpls.map(t => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid var(--border)">
+    <div><strong>${t.name}</strong><br><span style="font-size:12px;color:var(--dim)">${t.title} — ${t.body.slice(0,50)}...</span></div>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-green btn-sm" onclick="sendTemplate(${t.id},'${esc(t.title)}','${esc(t.body)}','${esc(t.image)}','${esc(t.url)}')">🚀</button>
+      <button class="btn btn-red btn-sm" onclick="deleteTemplate(${t.id})">🗑</button>
+    </div>
+  </div>`).join('');
+}
+function esc(s) { return (s||'').replace(/'/g, "\\'").replace(/\n/g,' '); }
+
+async function saveTemplate() {
+  await fetch(API + '/api/templates', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name:v('tpl-name'), title:v('tpl-title'), body:v('tpl-body'), image:v('tpl-image'), url:v('tpl-url') })
+  });
+  loadTemplates();
+  ['tpl-name','tpl-title','tpl-body','tpl-image'].forEach(id => document.getElementById(id).value = '');
+}
+
+async function sendTemplate(id, title, body, image, url) {
+  const r = await sendPush(title, body, image, url);
+  alert(`Отправлено: ${r.sent}, Ошибки: ${r.errors}`);
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('Удалить шаблон?')) return;
+  await fetch(API + '/api/templates/' + id, { method:'DELETE' });
+  loadTemplates();
+}
+
+async function quickPush(title, body) {
+  const r = await sendPush(title, body, '', '/');
+  document.getElementById('push-result').textContent = `✅ Отправлено: ${r.sent}`;
+}
+
+async function sendCustomPush() {
+  const r = await sendPush(v('push-title'), v('push-body'), v('push-image'), v('push-url'));
+  document.getElementById('push-result').textContent = `✅ Отправлено: ${r.sent}, Ошибки: ${r.errors}`;
+}
+
+async function sendPush(title, body, image, url) {
+  const r = await fetch(API + '/api/send', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ title, body, image, url })
+  });
+  return await r.json();
+}
+
+// ═══ PUSH LOG ═══
+async function loadPushLog() {
+  const r = await fetch(API + '/api/push-log');
+  const logs = await r.json();
+  const el = document.getElementById('push-log');
+  if (!logs.length) { el.innerHTML = '<div style="color:var(--dim);padding:8px">Пусто</div>'; return; }
+  el.innerHTML = logs.map(l => `<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:12px">
+    <span style="color:var(--dim)">${l.created_at}</span> &nbsp; <b>[${l.push_type}]</b> ${l.title} &nbsp; ✅${l.sent} ❌${l.errors}
+  </div>`).join('');
+}
+
+async function loadPushStats() {
+  const r = await fetch(API + '/api/stats');
+  const d = await r.json();
+  document.getElementById('push-stats').innerHTML = [
+    ['Подписчики', d.subs], ['Лиды', d.leads], ['События', d.events]
+  ].map(([l,v]) => `<div class="stat-card"><div class="val">${v}</div><div class="lbl">${l}</div></div>`).join('');
+}
+
+// ═══ SETTINGS ═══
+async function loadBlacklist() {
+  const r = await fetch(API + '/api/blacklist');
+  const items = await r.json();
+  document.getElementById('blacklist-items').innerHTML = items.map(i =>
+    `<div class="bl-item"><span>${i.ip} ${i.label?'<span style="color:var(--dim)">— '+i.label+'</span>':''}</span><button class="btn btn-red btn-sm" onclick="delBlacklist(${i.id})">✕</button></div>`
+  ).join('') || '<div style="color:var(--dim);padding:8px">No blocked IPs</div>';
+}
+
+async function addBlacklist() {
+  const ip = v('bl-ip'); if (!ip) return;
+  await fetch(API + '/api/blacklist', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ ip, label: v('bl-label') })
+  });
+  document.getElementById('bl-ip').value = '';
+  document.getElementById('bl-label').value = '';
+  loadBlacklist();
+}
+
+async function addMyIP() {
+  const r = await fetch(API + '/api/my-ip');
+  const d = await r.json();
+  document.getElementById('bl-ip').value = d.ip;
+  document.getElementById('bl-label').value = 'My IP';
+}
+
+async function delBlacklist(id) {
+  await fetch(API + '/api/blacklist/' + id, { method:'DELETE' });
+  loadBlacklist();
+}
+
+async function resetStats() {
+  const confirm = v('reset-confirm');
+  if (confirm !== 'подтвердить') { alert('Type "подтвердить" to confirm'); return; }
+  const r = await fetch(API + '/api/reset-stats', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ confirm })
+  });
+  const d = await r.json();
+  alert(`Reset done. Backed up ${d.backed_up} events.`);
+  document.getElementById('reset-confirm').value = '';
+  loadBackupStatus();
+}
+
+async function restoreStats() {
+  if (!confirm('Restore all events from backup?')) return;
+  await fetch(API + '/api/restore-stats', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' });
+  alert('Restored!');
+  loadBackupStatus();
+}
+
+async function loadBackupStatus() {
+  const r = await fetch(API + '/api/backup-status');
+  const d = await r.json();
+  const banner = document.getElementById('backup-banner');
+  if (d.hasBackup) {
+    banner.style.display = 'block';
+    document.getElementById('backup-count').textContent = d.count;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+async function loadSysInfo() {
+  const r = await fetch(API + '/api/stats');
+  const d = await r.json();
+  const bl = await fetch(API + '/api/blacklist'); const blk = await bl.json();
+  document.getElementById('sys-info').innerHTML = [
+    ['Push Subs', d.subs], ['Total Leads', d.leads], ['Total Events', d.events], ['Blocked IPs', blk.length]
+  ].map(([l,v]) => `<div class="stat-card"><div class="val">${v}</div><div class="lbl">${l}</div></div>`).join('');
+}
+
+// ═══ HELPERS ═══
+function v(id) { return document.getElementById(id).value.trim(); }
+
+// ═══ INIT ═══
+loadDashboard();
+setInterval(loadDashboard, 30000);
+</script>
+</body>
+</html>
